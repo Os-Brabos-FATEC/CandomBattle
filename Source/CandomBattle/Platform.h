@@ -43,6 +43,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UBoxComponent* BoxComp;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UBoxComponent* TriggerBoxComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UPaperFlipbookComponent* FlipbookComp;
@@ -101,7 +104,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float PlatformTimeToRespawn = 0.f;
 	
-	FTimerHandle FallingPlatformTimer;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float PlatformTimeToReturn = 0.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool TouchToMove = false;
+	
+	FTimerHandle FallingPlatformTimer, TouchPlatformStartTimer, TouchPlatformReturnTimer;
 	float TrembleAmplitude = 0.5f;
 	float TrembleElapsedTime = 0.f;
 	FVector FlipbookStartingPosition;
@@ -124,7 +133,15 @@ public:
 	UFUNCTION()
 	void FallingPlatformEvent(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
+	UFUNCTION()
+	void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	
 	void TremblingPlatformEffect();
 	void CheckPlatformOutOfCameraView();
 	void RespawnPlatform();
+	void StartPlatform(AActor* OtherActor);
+	void ReturnPlatform();
 };

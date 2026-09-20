@@ -6,6 +6,7 @@
 #include "Math/UnitConversion.h"
 #include "Splines/SplineMath.h"
 #include "PlayerCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -28,6 +29,9 @@ APlatform::APlatform()
 	BoxComp->BodyInstance.bLockYRotation = true;
 	BoxComp->BodyInstance.bLockYTranslation = true;
 	BoxComp->BodyInstance.bLockZRotation = true;
+	
+	TriggerBoxComp = CreateDefaultSubobject<UBoxComponent>(FName("TriggerBoxComp"));
+	TriggerBoxComp->SetupAttachment(BoxComp);
 
 	FlipbookComp = CreateDefaultSubobject<UPaperFlipbookComponent>(FName("FlipbookComp"));
 	FlipbookComp->SetupAttachment(BoxComp);
@@ -107,6 +111,13 @@ void APlatform::BeginPlay()
 		BoxComp->SetNotifyRigidBodyCollision(true);
 		BoxComp->OnComponentHit.AddDynamic(this, &APlatform::FallingPlatformEvent);
 	}
+
+	if (TouchToMove)
+	{
+		InterpToMoveComp->StopMovementImmediately();
+		TriggerBoxComp->OnComponentBeginOverlap.AddDynamic(this, &APlatform::OnBoxBeginOverlap);
+		TriggerBoxComp->OnComponentEndOverlap.AddDynamic(this, &APlatform::OnBoxEndOverlap);
+	}
 }
 
 // Called every frame
@@ -122,7 +133,8 @@ void APlatform::Tick(float DeltaTime)
 
 void APlatform::TremblingPlatformEffect()
 {
-	FlipbookComp->SetRelativeLocation(FlipbookStartingPosition + FVector(TrembleAmplitude * FMath::Cos(TrembleSpeed * TrembleElapsedTime), 0.f, 0.f));
+	FlipbookComp->SetRelativeLocation(
+		FlipbookStartingPosition + FVector(TrembleAmplitude * FMath::Cos(TrembleSpeed * TrembleElapsedTime), 0.f, 0.f));
 }
 
 void APlatform::FallingPlatformEvent(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -132,7 +144,6 @@ void APlatform::FallingPlatformEvent(UPrimitiveComponent* HitComp, AActor* Other
 	{
 		GetWorldTimerManager().SetTimer(FallingPlatformTimer, this, &APlatform::FallingPlatformTimerEvent, 1.f, false,
 		                                PlatformTimeToFall);
-		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, "FallingPlatform Activated");
 	}
 }
 
@@ -141,7 +152,6 @@ void APlatform::FallingPlatformTimerEvent()
 	BoxComp->SetSimulatePhysics(true);
 	GetWorldTimerManager().SetTimer(FallingPlatformTimer, this, &APlatform::CheckPlatformOutOfCameraView, 1.f, true,
 	                                1.f);
-	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, "FallingPlatform Physics Simulating");
 }
 
 void APlatform::CheckPlatformOutOfCameraView()
@@ -162,7 +172,8 @@ void APlatform::CheckPlatformOutOfCameraView()
 			BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			BoxComp->AttachToComponent(OrbitArm, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			GetWorldTimerManager().ClearTimer(FallingPlatformTimer);
-			GetWorldTimerManager().SetTimer(FallingPlatformTimer, this, &APlatform::RespawnPlatform, 1.f, false, PlatformTimeToRespawn);
+			GetWorldTimerManager().SetTimer(FallingPlatformTimer, this, &APlatform::RespawnPlatform, 1.f, false,
+			                                PlatformTimeToRespawn);
 		}
 	}
 }
@@ -171,5 +182,60 @@ void APlatform::RespawnPlatform()
 {
 	FlipbookComp->SetHiddenInGame(false);
 	BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Yellow, "RespawnPlatform Activated");
+}
+
+void APlatform::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                  const FHitResult& SweepResult)
+{
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
+	{
+		if (GetWorldTimerManager().IsTimerActive(TouchPlatformReturnTimer))
+		{
+			GetWorldTimerManager().ClearTimer(TouchPlatformReturnTimer);
+		}
+		else
+		{
+			FTimerDelegate TimerDel = FTimerDelegate::CreateUObject(this, &APlatform::StartPlatform, OtherActor);
+			GetWorldTimerManager().SetTimer(TouchPlatformStartTimer, TimerDel, .05f, true, .05f);
+		}
+	}
+}
+
+void APlatform::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
+	{
+		if (GetWorldTimerManager().IsTimerActive(TouchPlatformStartTimer))
+		{
+			GetWorldTimerManager().ClearTimer(TouchPlatformStartTimer);
+		}
+		else
+		{
+			GetWorldTimerManager().SetTimer(TouchPlatformReturnTimer, this, &APlatform::ReturnPlatform, PlatformTimeToReturn, false);
+		}
+	}
+}
+
+void APlatform::StartPlatform(AActor* OtherActor)
+{
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
+	{
+		if (UCharacterMovementComponent* MC = Player->GetCharacterMovement())
+		{
+			if (MC->MovementMode == MOVE_Walking && MC->CurrentFloor.HitResult.GetComponent() == BoxComp)
+			{
+				GetWorldTimerManager().ClearTimer(TouchPlatformStartTimer);
+				float Direction = 1.f;
+				InterpToMoveComp->RestartMovement(Direction);
+			}
+		}
+	}
+}
+
+void APlatform::ReturnPlatform()
+{
+	float Direction = 0.f;
+	InterpToMoveComp->RestartMovement(Direction);
 }

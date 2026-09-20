@@ -18,6 +18,7 @@ AFallHazard::AFallHazard()
 
 void AFallHazard::NotifyActorBeginOverlap(AActor* OtherActor)
 {
+	Super::NotifyActorBeginOverlap(OtherActor);
 	if (APlayerCharacter *Player = Cast<APlayerCharacter>(OtherActor))
 	{
 		Player->Invulnerable = false;
@@ -25,6 +26,7 @@ void AFallHazard::NotifyActorBeginOverlap(AActor* OtherActor)
 		
 		if (APlayerController* PlayerController = Cast<APlayerController>(Player->GetController()))
 		{
+			HazardCamera->SetWorldLocation(Player->Camera->GetComponentLocation());
 			PlayerController->SetViewTargetWithBlend(HazardCamera->GetOwner(), BlendTime);
 		}
 		
