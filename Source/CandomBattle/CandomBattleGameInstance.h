@@ -15,4 +15,6 @@ class CANDOMBATTLE_API UCandomBattleGameInstance : public UGameInstance
 	GENERATED_BODY()
 public:
 	FName CurrentLevel;
+	
+	virtual void Init() override;
 };

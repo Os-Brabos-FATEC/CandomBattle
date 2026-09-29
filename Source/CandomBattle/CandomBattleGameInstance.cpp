@@ -3,3 +3,16 @@
 
 #include "CandomBattleGameInstance.h"
 
+#include "Engine/Engine.h"
+#include "GameFramework/GameUserSettings.h"
+
+void UCandomBattleGameInstance::Init()
+{
+	Super::Init();
+	if (UGameUserSettings* Settings = GEngine->GetGameUserSettings())
+	{
+		// Settings->SetVSyncEnabled(true);
+		// Settings->SetFrameRateLimit(60.f);
+		// Settings->ApplySettings(false);
+	}
+}

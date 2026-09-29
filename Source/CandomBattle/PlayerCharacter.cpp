@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "CandomBattleGameMode.h"
+#include "CameraBoundsModifier.h"
 
 #include "PaperZDCharacter.h"
 
@@ -33,6 +34,8 @@ void APlayerCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(InputMapping, 0);
 		}
+		
+		PlayerController->PlayerCameraManager->AddNewCameraModifier(UCameraBoundsModifier::StaticClass());
 	}
 	
 	GetCharacterMovement()->bEnablePhysicsInteraction = false;
