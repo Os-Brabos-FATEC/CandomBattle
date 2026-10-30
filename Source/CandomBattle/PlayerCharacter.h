@@ -17,6 +17,8 @@
 #include "Components/SceneComponent.h"
 #include "FallHazard.h"
 #include "PlayerHUD.h"
+#include "Sound/SoundBase.h"
+#include "PaperSpriteComponent.h"
 
 #include "PlayerCharacter.generated.h"
 
@@ -94,6 +96,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UPlayerHUD* PlayerHUDWidget;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* JumpSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* HurtSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* DefeatSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPaperSpriteComponent* Background;
+	
 	FMovementFrictionCache CachedFriction;
 	FTimerHandle InvulnerableHandle;
 	
@@ -116,4 +130,5 @@ public:
 	void AttackOverrideEnd(bool Completed);
 	void CheckCharacterOutOfCameraView(AFallHazard* FallHazard);
 	void QuitGame();
+	void GameOver();
 };

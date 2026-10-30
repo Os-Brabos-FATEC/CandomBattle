@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "CandomBattleGameMode.h"
 #include "PlayerCameraModifier.h"
+#include "GameFramework/Character.h"
 
 #include "PaperZDCharacter.h"
 
@@ -22,6 +23,12 @@ APlayerCharacter::APlayerCharacter()
 	
 	ArrowProjectileSpawnPosition = CreateDefaultSubobject<USceneComponent>(TEXT("ArrowProjectile"));
 	ArrowProjectileSpawnPosition->SetupAttachment(RootComponent);
+	
+	Background = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Background"));
+	Background->SetupAttachment(RootComponent);
+	Background->SetUsingAbsoluteLocation(true);
+	Background->SetUsingAbsoluteRotation(true);
+	Background->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -93,6 +100,8 @@ void APlayerCharacter::BeginJump()
 	if (IsAlive && CanMove)
 	{
 		Jump();
+		if (ACharacter::JumpIsAllowedInternal())
+			UGameplayStatics::PlaySound2D(this, JumpSound);
 	}
 }
 
@@ -130,6 +139,8 @@ void APlayerCharacter::ReceiveDamage(int Value, TOptional<FVector> SourceLocatio
 		Invulnerable = true;
 		CanMove = false;
 		
+		UGameplayStatics::PlaySound2D(this, HurtSound);
+		
 		GetWorldTimerManager().SetTimer(InvulnerableHandle, this, &APlayerCharacter::InvulnerabilityEnd, 1.f, false, InvulnerableTimer);
 		
 		if (SourceLocation.IsSet())
@@ -164,6 +175,8 @@ void APlayerCharacter::Defeat()
 		GetWorldTimerManager().ClearTimer(InvulnerableHandle);
 		
 		GetAnimInstance()->JumpToNode(FName("JumpDefeat"), FName("PlayerCharacterStateMachine"));
+		
+		UGameplayStatics::PlaySound2D(this, DefeatSound);
 		
 		if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 		{
@@ -225,4 +238,18 @@ void APlayerCharacter::QuitGame()
 {
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 		UKismetSystemLibrary::QuitGame(this, PlayerController, EQuitPreference::Quit, false);
+}
+
+void APlayerCharacter::GameOver()
+{
+	CanMove = false;
+	CanAttack = false;
+		
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (ACandomBattleGameMode* GameMode = Cast<ACandomBattleGameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			GameMode->ShowGameOverHUD(PlayerController);
+		}
+	}
 }

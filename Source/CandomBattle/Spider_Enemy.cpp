@@ -46,7 +46,7 @@ void ASpider_Enemy::ActivateMovement(float DeltaTime)
 	}
 }
 
-void ASpider_Enemy::OnHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ASpider_Enemy::OnHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) 
 {
 	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
 	{
@@ -64,4 +64,5 @@ bool ASpider_Enemy::ReceiveDamage(int Value)
         GetAnimInstance()->JumpToNode(FName("JumpDefeat"), FName("SpiderEnemyStateMachine"));
 	}
 	return false;
+	
 }

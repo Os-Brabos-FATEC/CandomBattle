@@ -7,6 +7,7 @@
 
 #include "Components/BoxComponent.h"
 #include "PaperFlipbookComponent.h"
+#include "PaperZDAnimationComponent.h"
 
 #include "ArrowProjectile.generated.h"
 
@@ -26,6 +27,9 @@ public:
 	UPaperFlipbookComponent* SpriteComp;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPaperZDAnimationComponent* AnimComp;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int AttackPower = 1;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -33,6 +37,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int MovementDirection = 1;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* PortalSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* ArrowSound;
 	
 	FTimerHandle ArrowDeleteTimerHandle;
 	
@@ -49,7 +59,7 @@ public:
 	UFUNCTION()
 	void OnHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void OnAnimationFinished();
 	
 	UFUNCTION()

@@ -2,6 +2,7 @@
 
 
 #include "ArrowProjectile.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Enemy.h"
 
@@ -16,20 +17,21 @@ AArrowProjectile::AArrowProjectile()
 	
 	SpriteComp = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Sprite"));
 	SpriteComp->SetupAttachment(RootComponent);
+	
+	AnimComp = CreateDefaultSubobject<UPaperZDAnimationComponent>(TEXT("AnimComp"));
 }
 
 // Called when the game starts or when spawned
 void AArrowProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	SpriteComp->SetLooping(false);
 
 	HitboxComp->OnComponentBeginOverlap.AddDynamic(this, &AArrowProjectile::OnHitboxBeginOverlap);
-	SpriteComp->OnFinishedPlaying.AddDynamic(this, &AArrowProjectile::OnAnimationFinished);
 	
 	if (GetActorRotation().Yaw >= 180.f)
 		MovementDirection *= -1;
+	
+	UGameplayStatics::PlaySound2D(this, PortalSound);
 }
 
 // Called every frame

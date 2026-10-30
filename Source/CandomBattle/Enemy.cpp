@@ -2,6 +2,7 @@
 
 
 #include "Enemy.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "PlayerCharacter.h"
 
@@ -63,6 +64,8 @@ void AEnemy::CurrentStateCheck()
 bool AEnemy::ReceiveDamage(int Value)
 {
 	HitPoints -= Value;
+	
+	UGameplayStatics::PlaySound2D(this, HurtSound);
 	
 	if (HitPoints <= 0 && IsAlive)
 	{

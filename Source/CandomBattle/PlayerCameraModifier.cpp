@@ -5,6 +5,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Camera/PlayerCameraManager.h"
+#include "PlayerCharacter.h"
 
 #include "CameraBounds.h"
 
@@ -72,6 +73,15 @@ bool UPlayerCameraModifier::ModifyCamera(float DeltaTime, FMinimalViewInfo& InOu
 		
 		InOutPOV.Location.X = AX + FMath::GridSnap(InOutPOV.Location.X - AX, (double)UUPerScreenPx);
 		InOutPOV.Location.Z = AZ + FMath::GridSnap(InOutPOV.Location.Z - AZ, (double)UUPerScreenPx);
+	}
+	
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(CameraOwner ? CameraOwner->GetViewTarget() : nullptr))
+	{
+		if (Player->Background)
+		{
+			const FVector Cur = Player->Background->GetComponentLocation();
+			Player->Background->SetWorldLocation(FVector(InOutPOV.Location.X, Cur.Y, Cur.Z));
+		}
 	}
 	
 	return false;

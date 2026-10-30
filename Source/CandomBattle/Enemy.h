@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "PaperZDCharacter.h"
+#include "Sound/SoundBase.h"
 
 #include "Components/SphereComponent.h"
 
@@ -42,6 +43,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int HitPoints = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* HurtSound;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EEnemyState CurrentState = EEnemyState::Idle;
